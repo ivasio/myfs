@@ -15,21 +15,42 @@
 
 int main(int argc, char *argv[])
 {
-    if(argc != 2)
+    if(argc != 3)
     {
-        printf("\n Usage: %s METHOD_NUMBER \n", argv[0]);
+        printf("\n Usage: %s METHOD_NUMBER ARGS_STRING\n", argv[0]);
         return 1;
     }
 
     int method_id = atoi(argv[1]);
-    web_request_t* request = construct_request(method_id);
-    send_request(request);
+    web_request_t request;
+
+    int request_init_res = initialize_request(&request, method_id, argv[2]);
+    if (request_init_res != 0) {
+        printf("Request initialization failed with code %d\n", request_init_res);
+        return 1;
+    }
+
+    socket_t client_socket;
+    int request_send_res = send_request(&request, &client_socket);
+    if (request_send_res != 0) {
+        printf("Request sending failed with code %d\n", request_send_res);
+        return 1;
+    }
+
+    web_response_t response;
+    int response_read_res = read_response(client_socket, &response);
+    if (response_read_res != 0) {
+        printf("Response reading failed with code %d\n", response_read_res);
+        return 1;
+    }
+
+    printf("Server responded with message :\n%s", response.buff);
 
     return 0;
 }
 
-int send_request(web_request_t* request) {
-    socket_t client_socket = socket(AF_INET, SOCK_STREAM, 0);
+int send_request(web_request_t* request, socket_t* client_socket) {
+    *client_socket = socket(AF_INET, SOCK_STREAM, 0);
     if(client_socket < 0)
     {
         printf("\n Error : Could not create socket \n");
@@ -46,69 +67,79 @@ int send_request(web_request_t* request) {
         return 1;
     }
 
-    int connectRes = connect(client_socket, (struct sockaddr *)&serv_addr, sizeof(serv_addr));
+    int connectRes = connect(*client_socket, (struct sockaddr *)&serv_addr, sizeof(serv_addr));
     if(connectRes < 0) {
         printf("\n Error : Connect Failed \n");
         return 1;
     }
 
     char* send_buffer = serialize_request(request);
-    write(client_socket, send_buffer, strlen(send_buffer));
+    write(*client_socket, send_buffer, strlen(send_buffer));
+    return 0;
+}
 
-    web_response_t* response = read_response(client_socket);
-    printf("Request method id was %s", response->response_buff);
+int initialize_request(web_request_t* request, int method_id, char *data) {
+    if (method_id <= 0 || method_id >= N_FS_OPERATIONS) {
+        return -1;
+    }
 
-    // read the rest
-    char recvBuff[64] = {0};
+    request->operation_code = method_id;
+    request->n_args = 1;
+    request->args = (char**) calloc(request->n_args, sizeof(char*));
+    request->args[0] = data;
+
+    return 0;
+}
+
+char* serialize_request(struct web_request_t* request) {
+    unsigned long sum_args_len = 0;
+    for (int i = 0; i < request->n_args; i++) {
+        sum_args_len += strlen(request->args[i]) + 1;
+    }
+
+    char* request_buf = (char*) calloc(2 + sum_args_len, sizeof(char));
+    request_buf[0] = request->operation_code;
+    request_buf[1] = request->n_args;
+
+    char* buf_pos = &request_buf[2];
+    for (int i = 0; i < request->n_args; i++) {
+        strcpy(buf_pos, request->args[i]);
+        buf_pos += strlen(buf_pos) + 1;
+    }
+
+    return request_buf;
+}
+
+int read_response(socket_t client_socket, web_response_t* response) {
+    char receive_buffer[2] = {0};
+
+    // reading response status and length
+    read(client_socket, receive_buffer, 2);
+    response->status = receive_buffer[0];
+    if (response->status != RESPONSE_OK) {
+        return response->status;
+    }
+
+    response->len = receive_buffer[1];
+    response->buff = (char *) calloc(response->len + 1, sizeof(char));
+
+    // read the message
+    read(client_socket, response->buff, response->len);
+
+    // read the rest, todo improve
     while (1)
     {
-        int readRes = read(client_socket, recvBuff, sizeof(recvBuff) - 1);
+        int readRes = read(client_socket, receive_buffer, 1);
         if (readRes <= 0) {
             break;
         }
 
-        recvBuff[readRes] = 0;
-        if(fputs(recvBuff, stdout) == EOF)
+        receive_buffer[readRes] = 0;
+        if(fputs(receive_buffer, stdout) == EOF)
         {
             printf("\n Error : Fputs error\n");
         }
     }
 
     return 0;
-}
-
-web_request_t* construct_request(int method_id) {
-    if (method_id <= 0 || method_id >= N_FS_OPERATIONS) {
-        return NULL;
-    }
-    web_request_t* request = (web_request_t*) calloc(1, sizeof(web_request_t));
-    request->operation_code = method_id;
-    request->n_args = 0;
-    return request;
-}
-
-char* serialize_request(struct web_request_t* request) {
-    /*
-    int sum_args_len = 0;
-    for (int i = 0; i < request->n_args; i++) {
-        //
-    }
-    */
-    char* request_buf = (char*) calloc(2, sizeof(char));
-    request_buf[0] = request->operation_code;
-    request_buf[1] = request->n_args;
-
-    return request_buf;
-}
-
-web_response_t* read_response(socket_t client_socket) {
-    char receive_buffer[2] = {0};
-    read(client_socket, receive_buffer, 2);
-    web_response_t* response = (web_response_t*) calloc(1, sizeof(web_response_t));
-    response->status = receive_buffer[0];
-    if (response->status == RESPONSE_OK) {
-        response->response_len = receive_buffer[1];
-        response->response_buff = (char *) calloc(response->response_len, sizeof(char));
-    }
-    return response;
 }

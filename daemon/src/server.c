@@ -36,6 +36,8 @@ int setup_server() {
         return 1;
     }
 
+    printf("Started server on port %d", 8001);
+
     return serverSocket;
 }
 
@@ -75,9 +77,9 @@ int serve(socket_t server_socket) {
     write(client_socket, &resp_code, 1);
 
     if (response->status == RESPONSE_OK) {
-        char resp_len = (char)(response->response_len);
+        char resp_len = (char)(response->len);
         write(client_socket, &resp_len, 1);
-        write(client_socket, response->response_buff, response->response_len);
+        write(client_socket, response->buff, response->len);
     }
 
     // closing connection
@@ -107,9 +109,9 @@ web_response_t* get_response(const web_request_t* request) {
         response->status = RESPONSE_INVALID_REQUEST;
     } else {
         response->status = RESPONSE_OK;
-        response->response_len = 1;
-        response->response_buff = (char*) calloc(2, sizeof(char));
-        sprintf(response->response_buff, "%d", request->operation_code);
+        response->len = 1;
+        response->buff = (char*) calloc(2, sizeof(char));
+        sprintf(response->buff, "%d", request->operation_code);
     }
     return response;
 }

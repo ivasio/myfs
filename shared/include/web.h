@@ -9,7 +9,7 @@ typedef int socket_t;
 typedef struct web_request_t {
     FS_OPERATION operation_code;
     char n_args;
-    char* args[];
+    char** args;
 } web_request_t;
 
 
@@ -22,8 +22,8 @@ typedef enum response_status_t {
 
 typedef struct web_response_t {
     response_status_t status;
-    unsigned response_len;
-    char* response_buff;
+    unsigned len;
+    char* buff;
 } web_response_t;
 
 

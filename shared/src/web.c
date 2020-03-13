@@ -5,7 +5,7 @@
 
 
 void response_destroy(web_response_t* response) {
-    free(response->response_buff);
+    free(response->buff);
     free(response);
 }
 
