@@ -73,8 +73,9 @@ int send_request(web_request_t* request, socket_t* client_socket) {
         return 1;
     }
 
-    char* send_buffer = serialize_request(request);
-    write(*client_socket, send_buffer, strlen(send_buffer));
+    unsigned int buf_len = 0;
+    char* send_buffer = serialize_request(request, &buf_len);
+    write(*client_socket, send_buffer, buf_len);
     return 0;
 }
 
@@ -84,22 +85,26 @@ int initialize_request(web_request_t* request, int method_id, char *data) {
     }
 
     request->operation_code = method_id;
-    request->n_args = 1;
+    request->n_args = 3;
     request->args = (char**) calloc(request->n_args, sizeof(char*));
-    request->args[0] = data;
+    for (int i = 0; i < request->n_args; i++) {
+        request->args[i] = data;
+    }
 
     return 0;
 }
 
-char* serialize_request(struct web_request_t* request) {
+char *serialize_request(struct web_request_t *request, unsigned int *buffer_len) {
     unsigned long sum_args_len = 0;
     for (int i = 0; i < request->n_args; i++) {
         sum_args_len += strlen(request->args[i]) + 1;
     }
 
-    char* request_buf = (char*) calloc(2 + sum_args_len, sizeof(char));
+    *buffer_len = sum_args_len + 2;
+    char* request_buf = (char*) calloc(*buffer_len, sizeof(char));
+
     request_buf[0] = request->operation_code;
-    request_buf[1] = request->n_args;
+    request_buf[1] = sum_args_len;
 
     char* buf_pos = &request_buf[2];
     for (int i = 0; i < request->n_args; i++) {

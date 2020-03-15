@@ -7,8 +7,11 @@ int run_server(int server_socket);
 
 
 int serve(socket_t server_socket);
-web_request_t* parse_request(const char* request);
-web_response_t* get_response(const web_request_t* request);
 
+void read_request(web_request_t *request, socket_t client_socket);
+void construct_response(web_request_t* request, web_response_t* response);
+
+int send_response(web_response_t *response, socket_t client_socket);
+int parse_request(web_request_t* request, char* receive_buffer, char buf_len);
 
 #endif //CLIENT_SERVER_H

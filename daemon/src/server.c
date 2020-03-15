@@ -36,7 +36,7 @@ int setup_server() {
         return 1;
     }
 
-    printf("Started server on port %d", 8001);
+    printf("Started server on port %d\n\n", 8001);
 
     return serverSocket;
 }
@@ -50,61 +50,77 @@ int run_server(socket_t server_socket) {
     }
 }
 
-
-#define BUFF_SIZE 128
-
 int serve(socket_t server_socket) {
     socket_t client_socket = accept(server_socket, NULL, NULL);
-    char recv_buff[BUFF_SIZE];
 
-    int read_res = read(client_socket, recv_buff, sizeof(recv_buff) - 1);
-    if (read_res != 0) {
-        // todo
+    web_request_t request;
+    read_request(&request, client_socket);
+
+    printf("Got request for method id %d with %d args\n", request.operation_code, request.n_args);
+    for (int i = 0; i < request.n_args; i++) {
+        printf("%d : %s, ", i, request.args[i]);
     }
+    printf("\n");
 
-    web_request_t* request = parse_request(recv_buff);
-    web_response_t* response;
-
-    if (request != NULL) {
-        printf("Got request for method id %d\n", request->operation_code);
-        response = get_response(request);
-    } else {
-        response = (web_response_t*)calloc(1, sizeof(web_response_t));
-        response->status = RESPONSE_INVALID_REQUEST;
+    web_response_t response;
+    /* in case of invalid request
+    {
+    response->status = RESPONSE_INVALID_REQUEST;
     }
-
-    char resp_code = (char)(response->status);
-    write(client_socket, &resp_code, 1);
-
-    if (response->status == RESPONSE_OK) {
-        char resp_len = (char)(response->len);
-        write(client_socket, &resp_len, 1);
-        write(client_socket, response->buff, response->len);
-    }
+    */
+    construct_response(&request, &response);
+    send_response(&response, client_socket);
 
     // closing connection
     shutdown(client_socket, SHUT_RDWR);
     close(client_socket);
 
+    printf("Finished processing the request\n\n");
     // freeing used memory
     // response_destroy(response);
-    request_destroy(request);
+    // request_destroy(request);
 
     return 0;
 }
 
-web_request_t* parse_request(const char* request_buff) {
-    char operation_code = request_buff[0];
-    if (operation_code >= N_FS_OPERATIONS)
-        return NULL;
+void read_request(web_request_t* request, socket_t client_socket) {
+    char recv_buff[2];
 
-    web_request_t* request = (web_request_t*)calloc(1, sizeof(web_request_t));
-    request->operation_code = operation_code;
-    return request;
+    int read_res = read(client_socket, recv_buff, 2);
+    if (read_res != 0) {
+        // todo
+    }
+
+    request->operation_code = recv_buff[0];
+    char msg_len = recv_buff[1];
+
+    char* msg_buf = (char*) calloc(msg_len + 1, sizeof(char));
+    read(client_socket, msg_buf, msg_len);
+    parse_request(request, msg_buf, msg_len);
 }
 
-web_response_t* get_response(const web_request_t* request) {
-    web_response_t* response = (web_response_t *) calloc(1, sizeof(web_response_t));
+
+#define MAX_COMPONENTS_IN_REQUEST 8  // todo get it dynamically by method id
+int parse_request(web_request_t* request, char* receive_buffer, char buf_len) {
+    // check if parameters are valid for this type of request
+    if (request->operation_code >= N_FS_OPERATIONS)
+        return 1;
+
+    char* buff_pointer = receive_buffer;
+    request->args = (char**) calloc(MAX_COMPONENTS_IN_REQUEST, sizeof(char*));
+
+    char n_args = 0;
+    for(; (buff_pointer < receive_buffer + buf_len) && n_args < MAX_COMPONENTS_IN_REQUEST; n_args++) {
+        request->args[n_args] = buff_pointer;
+        buff_pointer += strlen(buff_pointer) + 1;  // moving to next 0-separated string
+    }
+    request->n_args = n_args;
+
+    return 0;
+}
+
+
+void construct_response(web_request_t* request, web_response_t* response) {
     if (request == NULL) {
         response->status = RESPONSE_INVALID_REQUEST;
     } else {
@@ -113,8 +129,22 @@ web_response_t* get_response(const web_request_t* request) {
         response->buff = (char*) calloc(2, sizeof(char));
         sprintf(response->buff, "%d", request->operation_code);
     }
-    return response;
 }
 
 
+int send_response(web_response_t *response, socket_t client_socket) {
+    char resp_code = (char)(response->status);
+    write(client_socket, &resp_code, 1);
 
+    char resp_len;
+    if (response->status == RESPONSE_OK) {
+        resp_len = (char)(response->len);
+        write(client_socket, &resp_len, 1);
+        write(client_socket, response->buff, response->len);
+    } else {
+        resp_len = 0;
+        write(client_socket, &resp_len, 1);
+    }
+
+    return 0;
+}
