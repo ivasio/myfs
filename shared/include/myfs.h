@@ -1,7 +1,4 @@
-#ifndef CLIENT_MYFS_H
-#define CLIENT_MYFS_H
-
-
+#pragma once
 #define N_FS_OPERATIONS 9
 
 // List of all supported operations
@@ -18,33 +15,22 @@ typedef enum FS_OPERATION {
 } FS_OPERATION;
 
 
-// Number of arguments that should be passed to any of these operations on client side
-const char n_operations_args[N_FS_OPERATIONS] = {
-    1, // cd takes the directory path to navigate to
-    1, // ls takes the path to display info about
-    2, // all cp variations take the destination and source paths
-    2,
-    2,
-    1, // rm takes a path to be deleted
-    2, // mv takes the destination and source paths
-    1, // mkdir takes the path of directory to be created
-    1, // cat takes the path of file to be shown
-};
+// Their actual string representations
+extern const char* operations_names[N_FS_OPERATIONS];
 
+// Number of arguments that should be passed to any of these operations on client side
+extern const char n_operations_args[N_FS_OPERATIONS];
 
 // Number of arguments that should be sent via the network. It is the same as number of
 // operation arguments except for `cp` variations
-const char n_request_args[N_FS_OPERATIONS] = {
-    1,
-    1,
-    2, // remote cp sends the destination and source paths on the server
-    2, // cp to remote sends destination path on the server and the content of file to be copied
-    1, // cp from remote sends source path
-    1,
-    2,
-    1,
-    1,
-};
+extern const char n_request_args[N_FS_OPERATIONS];
 
 
-#endif //CLIENT_MYFS_H
+/**
+ * Valid file and directory paths in the remote file system are must follow these criteria:
+ * - max length of 64 symbols
+ * - given token := [0-9a-zA-Z\(\)_- ]+, directory paths must conform to regex $/(token/)*^,
+ *      and file paths to regex $/token(/token)*^
+ */
+int validate_fs_file_path(const char* path);
+int validate_fs_directory_path(const char* path);

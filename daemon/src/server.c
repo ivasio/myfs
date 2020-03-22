@@ -36,7 +36,7 @@ int setup_server() {
         return 1;
     }
 
-    printf("Started server on port %d\n\n", 8001);
+    printf("Started server on port %d\n\n", 8005);
 
     return serverSocket;
 }
@@ -52,8 +52,15 @@ int run_server(socket_t server_socket) {
 
 int serve(socket_t server_socket) {
     socket_t client_socket = accept(server_socket, NULL, NULL);
+    if (client_socket < 0) {
+        printf("Error in accept!\n");
+        return 1;
+    }
+
+    printf("New connection from client");
 
     web_request_t request;
+    printf("Started reading request");
     read_request(&request, client_socket);
 
     printf("Got request for method id %d with %d args\n", request.operation_code, request.n_args);

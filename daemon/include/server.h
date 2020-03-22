@@ -1,7 +1,4 @@
-#ifndef CLIENT_SERVER_H
-#define CLIENT_SERVER_H
-
-
+#pragma once
 int setup_server();
 int run_server(int server_socket);
 
@@ -14,4 +11,3 @@ void construct_response(web_request_t* request, web_response_t* response);
 int send_response(web_response_t *response, socket_t client_socket);
 int parse_request(web_request_t* request, char* receive_buffer, char buf_len);
 
-#endif //CLIENT_SERVER_H

@@ -3,14 +3,13 @@ set(CMAKE_C_STANDARD 11)
 
 include_directories(shared/include)
 
-# daemon
+
 project(daemon C)
-# file(GLOB shared_sources RELATIVE shared/src *.c)
-add_executable(daemon shared/src/myfs.c shared/src/web.c daemon/src/server.c)
+add_executable(daemon daemon/src/server.c shared/src/myfs.c shared/src/web.c)
 target_include_directories(daemon PRIVATE daemon/include)
 
-# client
+
 project(client C)
-# file(GLOB shared_sources RELATIVE shared/src *.c)
-add_executable(client shared/src/myfs.c shared/src/web.c client/src/client.c  ${shared_sources})
+add_executable(client client/src/prepare_request.c client/src/client.c shared/src/myfs.c
+        shared/src/web.c )
 target_include_directories(client PRIVATE client/include)

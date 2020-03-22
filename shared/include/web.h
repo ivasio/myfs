@@ -1,6 +1,4 @@
-#ifndef MYFS_H
-#define MYFS_H
-
+#pragma once
 #include <myfs.h>
 
 typedef int socket_t;
@@ -29,6 +27,3 @@ typedef struct web_response_t {
 
 void request_destroy(web_request_t* request);
 void response_destroy(web_response_t* response);
-
-
-#endif //MYFS_H
