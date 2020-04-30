@@ -51,6 +51,7 @@ int run_server(socket_t server_socket) {
     }
 }
 
+
 int serve(socket_t server_socket) {
     socket_t client_socket = accept(server_socket, NULL, NULL);
     if (client_socket < 0) {
@@ -58,17 +59,11 @@ int serve(socket_t server_socket) {
         return 1;
     }
 
-    printf("New connection from client");
+    printf("New connection from client\n");
 
     web_request_t request;
-    printf("Started reading request");
     read_request(&request, client_socket);
-
-    printf("Got request for method id %d with %d args\n", request.operation_code, request.n_args);
-    for (int i = 0; i < request.n_args; i++) {
-        printf("%d : %s, ", i, request.args[i]);
-    }
-    printf("\n");
+    process_request(&request);
 
     web_response_t response;
     /* in case of invalid request
@@ -92,6 +87,7 @@ int serve(socket_t server_socket) {
 }
 
 void read_request(web_request_t* request, socket_t client_socket) {
+    printf("Started reading request\n");
     char recv_buff[2];
 
     int read_res = read(client_socket, recv_buff, 2);
@@ -108,17 +104,28 @@ void read_request(web_request_t* request, socket_t client_socket) {
 }
 
 
-#define MAX_COMPONENTS_IN_REQUEST 8  // todo get it dynamically by method id
+int process_request(web_request_t *request) {
+    printf("Got request for method id %d with %d args\n", request->operation_code, request->n_args);
+    for (int i = 0; i < request->n_args; i++) {
+        printf("%d : %s, ", i, request->args[i]);
+    }
+    printf("\n");
+
+    return 0;
+}
+
+
 int parse_request(web_request_t* request, char* receive_buffer, char buf_len) {
     // check if parameters are valid for this type of request
     if (request->operation_code >= N_FS_OPERATIONS)
-        return 1;
+        return -1;
 
+    int n_args_total = n_request_args[request->operation_code];
     char* buff_pointer = receive_buffer;
-    request->args = (char**) calloc(MAX_COMPONENTS_IN_REQUEST, sizeof(char*));
+    request->args = (char**) calloc(n_args_total, sizeof(char*));
 
     char n_args = 0;
-    for(; (buff_pointer < receive_buffer + buf_len) && n_args < MAX_COMPONENTS_IN_REQUEST; n_args++) {
+    for(; (buff_pointer < receive_buffer + buf_len) && n_args < n_args_total; n_args++) {
         request->args[n_args] = buff_pointer;
         buff_pointer += strlen(buff_pointer) + 1;  // moving to next 0-separated string
     }

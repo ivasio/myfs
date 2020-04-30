@@ -44,7 +44,11 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    printf("Server responded with message :\n%s", response.buff);
+    printf("Server responded with message :\t");
+    for (int i = 0; i < response.len; i++) {
+        printf("%c", response.buff[i]);
+    }
+    printf("\n\n");
 
     return 0;
 }
