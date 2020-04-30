@@ -16,16 +16,17 @@
 
 int main(void)
 {
-    int serverSocket = setup_server();
+    int server_port = 8005;
+    int serverSocket = setup_server(server_port);
     return run_server(serverSocket);
 }
 
-int setup_server() {
+int setup_server(int server_port) {
     socket_t serverSocket = socket(AF_INET, SOCK_STREAM, 0);
 
     struct sockaddr_in serverAddress;
     serverAddress.sin_family = AF_INET;
-    serverAddress.sin_port = htons(8001);
+    serverAddress.sin_port = htons(server_port);
     serverAddress.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
 
     bind(serverSocket, (struct sockaddr *) &serverAddress, sizeof(serverAddress));
@@ -36,7 +37,7 @@ int setup_server() {
         return 1;
     }
 
-    printf("Started server on port %d\n\n", 8005);
+    printf("Started server on port %d\n\n", server_port);
 
     return serverSocket;
 }
