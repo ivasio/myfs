@@ -9,7 +9,7 @@
 #include <errno.h>
 #include <arpa/inet.h>
 
-#include <web.h>
+#include <myfs.h>
 #include <client.h>
 
 int main(int argc, char *argv[])

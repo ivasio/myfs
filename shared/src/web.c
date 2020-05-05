@@ -1,7 +1,6 @@
 #include <stdlib.h>
 
 #include <myfs.h>
-#include <web.h>
 
 
 void response_destroy(web_response_t* response) {
