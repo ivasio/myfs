@@ -10,11 +10,8 @@
 #include <server.h>
 
 
-void resend_request(char *pipe_path, char *buf, char len);
-
-int main(void)
-{
-    int server_port = 8005;
+int main(void) {
+    int server_port = 8006;
     int serverSocket = setup_server(server_port);
 
     char* fifo_path = "/tmp/ivasio-fs-fifo";
@@ -95,24 +92,25 @@ void read_request(web_request_t *request, socket_t client_socket, char *pipe_pat
     printf("Started reading request\n");
     char recv_buff[2];
 
-    int read_res = read(client_socket, recv_buff, 2);
-    if (read_res != 0) {
-        // todo
+    int read_res = _read(client_socket, recv_buff, 2);
+    if (read_res == -1) {
+        perror("read_res != 0");
     }
 
-    request->operation_code = recv_buff[0];
+    char op_code = recv_buff[0];
     char msg_len = recv_buff[1];
 
     char* msg_buf = (char*) calloc(msg_len + 1, sizeof(char));
-    read(client_socket, msg_buf, msg_len);
-    resend_request(pipe_path, msg_buf, msg_len);
+    _read(client_socket, msg_buf, msg_len);
+    resend_request(pipe_path, op_code, msg_len, msg_buf);
     free(msg_buf);
 }
 
 
-void resend_request(char *pipe_path, char *buf, char len) {
+void resend_request(char *pipe_path, char op_code, char len, char *buf) {
     int pipe = open(pipe_path, O_WRONLY);
 
+    write(pipe, &op_code, 1);
     write(pipe, &len, 1);
     write(pipe, buf, len);
 
@@ -124,12 +122,11 @@ void construct_response(web_response_t *response, char *pipe_path) {
     int pipe = open(pipe_path, O_RDONLY);
 
     char status_len[2];
-    read(pipe, status_len, 2);
+    _read(pipe, status_len, 2);
     response->status = status_len[0];
     response->len = status_len[1];
-
     response->buff = (char*) calloc(status_len[1], sizeof(char));
-    read(pipe, response->buff, response->len);
+    _read(pipe, response->buff, response->len);
 
     close(pipe);
 }

@@ -1,4 +1,7 @@
 #pragma once
+
+#include <stdlib.h>
+
 #define N_FS_OPERATIONS 9
 
 // List of all supported operations
@@ -59,6 +62,7 @@ typedef struct web_response_t {
     char* buff;
 } web_response_t;
 
+int _read(int fd, char* buf, size_t len);
 
 void request_destroy(web_request_t* request);
 void response_destroy(web_response_t* response);

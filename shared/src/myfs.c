@@ -1,5 +1,8 @@
 #include <string.h>
+#include <stdlib.h>
+#include <stdio.h>
 #include <ctype.h>
+#include <unistd.h>
 
 #include <myfs.h>
 
@@ -55,4 +58,34 @@ int validate_fs_file_path(const char* path) {
 
 int validate_fs_directory_path(const char* path) {
     return 0;
+}
+
+
+int _read(int fd, char* buf, size_t len) {
+    size_t len_left = len;
+    while (len_left != 0) {
+        int read_res = read(fd, buf, len_left);
+        if (read_res < 0) {
+            return read_res;
+        } else {
+            len_left -= read_res;
+            buf += read_res;
+        }
+    }
+    return len;
+}
+
+
+void response_destroy(web_response_t* response) {
+    free(response->buff);
+    free(response);
+}
+
+
+void request_destroy(web_request_t* request) {
+    int n_components = n_request_args[request->operation_code];
+    for (int i = 0; i < n_components; i++)
+        free(request->args[i]);
+
+    free(request);
 }

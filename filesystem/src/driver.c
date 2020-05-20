@@ -2,29 +2,84 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
 #include <fcntl.h>
-#include <sys/stat.h>
-#include <myfs.h>
 
+#include <myfs.h>
 #include <filesystem.h>
 
 
-int process_request(web_request_t *request) {
-    printf("Got request for method id %d with %d args\n", request->operation_code, request->n_args);
-    for (int i = 0; i < request->n_args; i++) {
-        printf("%d : %s, ", i, request->args[i]);
+int main() {
+    fs_t* fs = setup_fs();
+//    if (fs == NULL) {
+//        perror("Falied to initialize file system");
+//        return 1;
+//    }
+
+    char* pipe_path = "/tmp/ivasio-fs-fifo";
+    run_fs(fs, pipe_path);
+    finalize_fs(fs);
+}
+
+
+void run_fs(fs_t *fs, char *pipe_path) {
+    int serve_res;
+    while(1) {
+        serve_res = serve(fs, pipe_path);
+        if (serve_res != 0)
+            return;
     }
-    printf("\n");
+}
+
+
+int serve(fs_t *fs, char *pipe_path) {
+    web_request_t request;
+    read_request(&request, pipe_path);
+
+    web_response_t response;
+    process_request(fs, &response, &request);
+
+    send_response(&response, pipe_path);
 
     return 0;
 }
 
-int parse_request(web_request_t* request, char* receive_buffer, char buf_len) {
+
+int process_request(fs_t *fs, web_response_t *response, web_request_t *request) {
+    printf("Got request for method %s with %d args\n", operations_names[request->operation_code],
+        request->n_args);
+    for (int i = 0; i < request->n_args; i++) {
+        printf("%d : %s, ", i, request->args[i]);
+    }
+    printf("\n\n");
+
+    response->status = RESPONSE_OK;
+    response->buff = "response ok";
+    response->len = strlen(response->buff);
+
+    return 0;
+}
+
+
+int read_request(web_request_t *request, char *pipe_path) {
+    int pipe = open(pipe_path, O_RDONLY);
+
+    char code_len[2];
+    _read(pipe, &code_len, 2);
+    char* buff = (char*) calloc(code_len[1], sizeof(char));
+    _read(pipe, buff, code_len[1]);
+
+    parse_request(request, code_len[0], code_len[1], buff);
+
+    return 0;
+}
+
+
+int parse_request(web_request_t *request, char op_code, char buf_len, char *receive_buffer) {
     // check if parameters are valid for this type of request
-    if (request->operation_code >= N_FS_OPERATIONS)
+    if (op_code >= N_FS_OPERATIONS) {
         return -1;
+    }
+    request->operation_code = op_code;
 
     int n_args_total = n_request_args[request->operation_code];
     char* buff_pointer = receive_buffer;
@@ -37,5 +92,26 @@ int parse_request(web_request_t* request, char* receive_buffer, char buf_len) {
     }
     request->n_args = n_args;
 
+    return 0;
+}
+
+
+int send_response(web_response_t* response, char* pipe_path) {
+    int pipe = open(pipe_path, O_WRONLY);
+
+    char resp_code = (char)(response->status);
+    write(pipe, &resp_code, 1);
+
+    char resp_len;
+    if (response->status == RESPONSE_OK) {
+        resp_len = (char)(response->len);
+        write(pipe, &resp_len, 1);
+        write(pipe, response->buff, response->len);
+    } else {
+        resp_len = 0;
+        write(pipe, &resp_len, 1);
+    }
+
+    close(pipe);
     return 0;
 }

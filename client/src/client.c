@@ -19,9 +19,9 @@ int main(int argc, char *argv[])
         printf("\n Usage: %s OPERATION OPERATION_ARGUMENT_1 [, OPERATION_ARGUMENT_2, ...]\n", argv[0]);
         return 1;
     }
+    printf("Requesting %s\n", argv[1]);
 
     web_request_t request;
-    printf("Started constructing request\n");
     int request_init_res = initialize_request(argc - 2, argv[1], argv + 2, &request);
     if (request_init_res != 0) {
         printf("Request initialization failed with code %d\n", request_init_res);
@@ -29,18 +29,16 @@ int main(int argc, char *argv[])
     }
 
     socket_t client_socket;
-    printf("Started sending request\n");
     int request_send_res = send_request(&request, &client_socket);
     if (request_send_res != 0) {
-        printf("Request sending failed with code %d\n", request_send_res);
+        perror("Request sending failed");
         return 1;
     }
 
     web_response_t response;
-    printf("Started reading response\n");
     int response_read_res = read_response(client_socket, &response);
     if (response_read_res != 0) {
-        printf("Response reading failed with code %d\n", response_read_res);
+        perror("Response reading failed");
         return 1;
     }
 
@@ -63,7 +61,7 @@ int send_request(web_request_t* request, socket_t* client_socket) {
 
     struct sockaddr_in serv_addr;
     serv_addr.sin_family = AF_INET;
-    serv_addr.sin_port = htons(8005);
+    serv_addr.sin_port = htons(8006);
 
     if(inet_pton(AF_INET, "127.0.0.1", &serv_addr.sin_addr) <= 0)
     {
@@ -73,7 +71,7 @@ int send_request(web_request_t* request, socket_t* client_socket) {
 
     int connectRes = connect(*client_socket, (struct sockaddr *)&serv_addr, sizeof(serv_addr));
     if(connectRes < 0) {
-        perror("Error : Connect failed");
+        perror("Connect failed");
         return 1;
     }
 
@@ -87,7 +85,7 @@ int read_response(socket_t client_socket, web_response_t* response) {
     char receive_buffer[2] = {0};
 
     // reading response status and length
-    read(client_socket, receive_buffer, 2);
+    _read(client_socket, receive_buffer, 2);
     response->status = receive_buffer[0];
     if (response->status != RESPONSE_OK) {
         return response->status;
@@ -97,22 +95,23 @@ int read_response(socket_t client_socket, web_response_t* response) {
     response->buff = (char *) calloc(response->len + 1, sizeof(char));
 
     // read the message
-    read(client_socket, response->buff, response->len);
+    _read(client_socket, response->buff, response->len);
 
     // read the rest, todo improve
-    while (1)
-    {
-        int readRes = read(client_socket, receive_buffer, 1);
-        if (readRes <= 0) {
-            break;
-        }
-
-        receive_buffer[readRes] = 0;
-        if(fputs(receive_buffer, stdout) == EOF)
-        {
-            printf("\n Error : Fputs error\n");
-        }
-    }
+//    while (1)
+//    {
+//        int readRes = _read(client_socket, receive_buffer, 1);
+//        if (readRes <= 0) {
+//            perror("Failed to read the residing symbol");
+//            break;
+//        }
+//
+//        receive_buffer[readRes] = 0;
+//        if(fputs(receive_buffer, stdout) == EOF)
+//        {
+//            printf("\n Error : Fputs error\n");
+//        }
+//    }
 
     return 0;
 }
