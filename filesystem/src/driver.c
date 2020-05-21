@@ -9,15 +9,19 @@
 
 
 int main() {
-    fs_t* fs = setup_fs();
-    if (fs == NULL) {
+    disc_t disc;
+    fs_t fs;
+    fs.disc = &disc;
+
+    int setup_res = setup_fs(&fs);
+    if (setup_res < 0) {
         perror("Falied to initialize file system");
         return 1;
     }
 
     char* pipe_path = "/tmp/ivasio-fs-fifo";
-    run_fs(fs, pipe_path);
-    finalize_fs(fs);
+    run_fs(&fs, pipe_path);
+    finalize_fs(&fs);
 }
 
 
