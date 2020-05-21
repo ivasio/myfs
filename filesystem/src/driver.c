@@ -10,10 +10,10 @@
 
 int main() {
     fs_t* fs = setup_fs();
-//    if (fs == NULL) {
-//        perror("Falied to initialize file system");
-//        return 1;
-//    }
+    if (fs == NULL) {
+        perror("Falied to initialize file system");
+        return 1;
+    }
 
     char* pipe_path = "/tmp/ivasio-fs-fifo";
     run_fs(fs, pipe_path);
@@ -50,12 +50,10 @@ int process_request(fs_t *fs, web_response_t *response, web_request_t *request) 
     for (int i = 0; i < request->n_args; i++) {
         printf("%d : %s, ", i, request->args[i]);
     }
-    printf("\n\n");
+    printf("\n");
 
-    response->status = RESPONSE_OK;
-    response->buff = "response ok";
-    response->len = strlen(response->buff);
-
+    fs->operations[request->operation_code](fs, request, response);
+    printf("\n");
     return 0;
 }
 

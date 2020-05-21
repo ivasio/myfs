@@ -4,7 +4,7 @@
 
 
 typedef struct fs_t {
-
+    int (*operations[N_FS_OPERATIONS])(struct fs_t*, web_request_t*, web_response_t*);
 } fs_t;
 fs_t* setup_fs();
 
