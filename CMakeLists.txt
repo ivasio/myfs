@@ -4,7 +4,12 @@ set(CMAKE_C_STANDARD 11)
 include_directories(shared/include)
 
 project(filesystem C)
-add_executable(filesystem filesystem/src/filesystem.c filesystem/src/driver.c shared/src/myfs.c)
+add_executable(filesystem
+        filesystem/src/filesystem.c
+        filesystem/src/operations.c
+        filesystem/src/driver.c
+        filesystem/src/utils.c
+        shared/src/myfs.c)
 target_include_directories(filesystem PRIVATE filesystem/include)
 
 project(daemon C)
