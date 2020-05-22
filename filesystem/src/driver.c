@@ -66,7 +66,7 @@ int read_request(web_request_t *request, char *pipe_path) {
     int pipe = open(pipe_path, O_RDONLY);
 
     char code_len[2];
-    _read(pipe, &code_len, 2);
+    _read(pipe, code_len, 2);
     char* buff = (char*) calloc(code_len[1], sizeof(char));
     _read(pipe, buff, code_len[1]);
 

@@ -1,12 +1,33 @@
 #include <string.h>
-#include <sys/mman.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <errno.h>
-#include <stdio.h>
+
 #include <filesystem.h>
-#include <myfs.h>
-#include "operations.c"
+#include <data_structures.h>
+
+
+int parse_path(char *full_path, str_array* tokens_arr) {
+    const char* delimiter = "/";
+    if (full_path[0] != delimiter[0]) {
+        return -1;
+    }
+
+    unsigned long path_len = strlen(full_path);
+    int n_tokens = 0;
+    for (int i = 0; i < path_len - 1; i++) {
+        if (full_path[i] == delimiter[0]) n_tokens += 1;
+    }
+
+    char** tokens = (char**) calloc(n_tokens, sizeof(char*));
+    int token_idx = 0;
+    tokens[token_idx] = strtok(full_path, delimiter);
+    while(tokens[token_idx] != NULL) {
+        token_idx += 1;
+        tokens[token_idx] = strtok(NULL, delimiter);
+    }
+
+    tokens_arr->len = n_tokens;
+    tokens_arr->strings = tokens;
+    return 0;
+}
 
 
 void map_disc(fs_t *fs, void *disc) {

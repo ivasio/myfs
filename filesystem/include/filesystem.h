@@ -1,5 +1,6 @@
 #pragma once
 
+#include <data_structures.h>
 #include <myfs.h>
 
 
@@ -38,7 +39,7 @@ typedef struct disc_t {
 
 typedef struct fs_t {
     disc_t* disc;
-    unsigned current_dir;  // inode # of the current directory
+    inode_t* current_dir;  // inode # of the current directory
     int (*operations[N_FS_OPERATIONS])(struct fs_t*, web_request_t*, web_response_t*);
 } fs_t;
 
@@ -49,9 +50,13 @@ void finalize_fs(fs_t *fs);
 
 
 // fs file manipulation functions
-int fs_find_inode(fs_t* fs, char* full_path, file_type_t file_type, inode_t* directory);
+int fs_find_inode(fs_t* fs, char* full_path, file_type_t file_type, inode_t **file);
 int fs_get_current_directory(fs_t* fs, inode_t* directory);
 int fs_set_current_directory(fs_t* fs, inode_t* directory);
+
+int fs_get_root_dir(fs_t *fs, inode_t **dir);
+int fs_directory_get_child(fs_t *fs, inode_t *parent, char *child_name, inode_t **child);
+int fs_get_inode(fs_t* fs, inode_t **inode, unsigned inode_idx);
 
 
 // fs ipc functions
@@ -68,3 +73,5 @@ unsigned get_disc_size(head_block_t* head_block);
 void map_disc(fs_t *fs, void *disc);
 unsigned get_inode_size(head_block_t* head_block);
 void fill_default_head_block(head_block_t *head_block);
+int parse_path(char *full_path, str_array *tokens);
+int fs_setup_operations(fs_t *fs);
