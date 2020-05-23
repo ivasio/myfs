@@ -137,14 +137,9 @@ int send_response(web_response_t *response, socket_t client_socket) {
     write(client_socket, &resp_code, 1);
 
     char resp_len;
-    if (response->status == RESPONSE_OK) {
-        resp_len = (char)(response->len);
-        write(client_socket, &resp_len, 1);
-        write(client_socket, response->buff, response->len);
-    } else {
-        resp_len = 0;
-        write(client_socket, &resp_len, 1);
-    }
+    resp_len = (char)(response->len);
+    write(client_socket, &resp_len, 1);
+    write(client_socket, response->buff, response->len);
 
     return 0;
 }

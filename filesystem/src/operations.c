@@ -1,20 +1,22 @@
-#pragma once
-
-#include <stdlib.h>
 #include <string.h>
-#include <sys/mman.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <errno.h>
-#include <stdio.h>
 
 #include <filesystem.h>
 
 
 int cd(fs_t* fs, web_request_t* request, web_response_t* response) {
     inode_t* directory;
-    fs_find_inode(fs, request->args[0], FILE_DIR, &directory);
-    fs_set_current_directory(fs, directory);
+    if (fs_find_inode(fs, request->args[0], FILE_DIR, &directory) < 0) {
+        response->status = RESPONSE_INVALID_REQUEST;
+        response->buff = "No such directory";
+        response->len = strlen(response->buff);
+        return 0;
+    }
+    if (fs_set_current_directory(fs, directory) < 0) {
+        response->status = RESPONSE_SERVER_ERROR;
+        response->buff = "Failed to set directory as current";
+        response->len = strlen(response->buff);
+        return 0;
+    }
     response->status = RESPONSE_OK;
     response->buff = "OK";
     response->len = 2;
@@ -64,9 +66,16 @@ int mv(fs_t* fs, web_request_t* request, web_response_t* response) {
 }
 
 int mkdir(fs_t* fs, web_request_t* request, web_response_t* response) {
-    response->status = RESPONSE_OK;
-    response->buff = "OK";
-    response->len = 2;
+    inode_t* inode;
+    if (fs_create_file(fs, request->args[0], FILE_DIR, &inode) < 0) {
+        response->status = RESPONSE_SERVER_ERROR;
+        response->buff = "Failed to create directory";
+        response->len = strlen(response->buff);
+    } else {
+        response->status = RESPONSE_OK;
+        response->buff = "OK";
+        response->len = 2;
+    }
     return 0;
 }
 

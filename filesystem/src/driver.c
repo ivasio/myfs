@@ -104,15 +104,9 @@ int send_response(web_response_t* response, char* pipe_path) {
     char resp_code = (char)(response->status);
     write(pipe, &resp_code, 1);
 
-    char resp_len;
-    if (response->status == RESPONSE_OK) {
-        resp_len = (char)(response->len);
-        write(pipe, &resp_len, 1);
-        write(pipe, response->buff, response->len);
-    } else {
-        resp_len = 0;
-        write(pipe, &resp_len, 1);
-    }
+    char resp_len = (char)(response->len);
+    write(pipe, &resp_len, 1);
+    write(pipe, response->buff, response->len);
 
     close(pipe);
     return 0;

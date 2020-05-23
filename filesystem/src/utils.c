@@ -31,7 +31,7 @@ int parse_path(char *full_path, str_array* tokens_arr) {
 
 
 void map_disc(fs_t *fs, void *disc) {
-    /// Only setting the pointers to the starts of all the sections
+    /// Setting the pointers to the starts of all the sections & initializing `/` folder
     fs->disc->head_block = (head_block_t*)disc;
     disc += sizeof(head_block_t);
 
@@ -45,6 +45,17 @@ void map_disc(fs_t *fs, void *disc) {
     disc += fs->disc->head_block->n_inodes_total * fs->disc->head_block->inode_size;
 
     fs->disc->blocks = (void**)disc;
+
+    fs->disc->inodes_map[0] = INODE_OCCUPIED;
+    fs->disc->inodes_map[1] = INODE_OCCUPIED;
+
+//    inode_t* root_dir = (inode_t*)(fs->disc->inodes + fs->disc->head_block->inode_size);
+//    root_dir->file_type = FILE_DIR;
+
+    inode_t* root_dir = fs->disc->inodes + fs->disc->head_block->inode_size;
+    root_dir->file_type = FILE_DIR;
+    root_dir->file_name = (char*)(root_dir + sizeof(file_type_t) + sizeof(char*) + sizeof(unsigned*));
+    root_dir->contents = (void*)(root_dir->file_name + fs->disc->head_block->file_name_len);
 }
 
 unsigned get_disc_size(head_block_t* head_block) {
@@ -60,9 +71,9 @@ unsigned get_inode_size(head_block_t* head_block) {
 
 void fill_default_head_block(head_block_t *head_block) {
     head_block->file_name_len = 32;
-    head_block->n_inodes_total = 1024;
-    head_block->n_blocks_total = 2048;
+    head_block->n_inodes_total = 128;
+    head_block->n_blocks_total = 512;
     head_block->block_size = 1024;
-    head_block->n_blocks_in_file = 128;
+    head_block->n_blocks_in_file = 32;
     head_block->inode_size = get_inode_size(head_block);
 }

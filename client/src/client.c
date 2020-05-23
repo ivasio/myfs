@@ -87,31 +87,14 @@ int read_response(socket_t client_socket, web_response_t* response) {
     // reading response status and length
     _read(client_socket, receive_buffer, 2);
     response->status = receive_buffer[0];
-    if (response->status != RESPONSE_OK) {
-        return response->status;
-    }
-
     response->len = receive_buffer[1];
     response->buff = (char *) calloc(response->len + 1, sizeof(char));
-
-    // read the message
     _read(client_socket, response->buff, response->len);
 
-    // read the rest, todo improve
-//    while (1)
-//    {
-//        int readRes = _read(client_socket, receive_buffer, 1);
-//        if (readRes <= 0) {
-//            perror("Failed to read the residing symbol");
-//            break;
-//        }
-//
-//        receive_buffer[readRes] = 0;
-//        if(fputs(receive_buffer, stdout) == EOF)
-//        {
-//            printf("\n Error : Fputs error\n");
-//        }
-//    }
+    if (response->status != RESPONSE_OK) {
+        printf("%.*s\n", response->len, response->buff);
+        return response->status;
+    }
 
     return 0;
 }

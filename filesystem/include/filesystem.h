@@ -22,10 +22,17 @@ typedef enum file_type_t {
 
 typedef struct inode_t {
     file_type_t file_type;
-    unsigned link_count;
     char* file_name; // only current part of the name
     unsigned* contents; // pointers to blocks for file or to other inodes for directory
+    char* file_name_data;
+    unsigned* contents_data;
 } inode_t;
+
+
+enum {
+    INODE_FREE,
+    INODE_OCCUPIED
+};
 
 
 typedef struct disc_t {
@@ -53,10 +60,11 @@ void finalize_fs(fs_t *fs);
 int fs_find_inode(fs_t* fs, char* full_path, file_type_t file_type, inode_t **file);
 int fs_get_current_directory(fs_t* fs, inode_t* directory);
 int fs_set_current_directory(fs_t* fs, inode_t* directory);
-
 int fs_get_root_dir(fs_t *fs, inode_t **dir);
 int fs_directory_get_child(fs_t *fs, inode_t *parent, char *child_name, inode_t **child);
 int fs_get_inode(fs_t* fs, inode_t **inode, unsigned inode_idx);
+int fs_create_file(fs_t *fs, char *full_path, enum file_type_t file_type, inode_t** inode);
+unsigned int fs_find_free_inode(fs_t *fs);
 
 
 // fs ipc functions
