@@ -74,6 +74,7 @@ int fs_create_file(fs_t *fs, char *full_path, enum file_type_t file_type, inode_
     for (int i = 0; i < fs->disc->head_block->n_blocks_in_file; i++) {
         if (directory->contents[i] == 0) {
             directory->contents[i] = inode_idx;
+            break;
         }
     }
     return 0;
