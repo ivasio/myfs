@@ -77,6 +77,8 @@ int fs_create_file(fs_t *fs, char *full_path, enum file_type_t file_type, inode_
             break;
         }
     }
+
+    str_array_destroy(&tokens);
     return 0;
 }
 

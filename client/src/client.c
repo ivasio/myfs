@@ -42,6 +42,7 @@ int main(int argc, char *argv[])
     }
     printf("\n\n");
 
+    free(response.buff);
     return 0;
 }
 
@@ -72,6 +73,8 @@ int send_request(web_request_t* request, socket_t* client_socket) {
     unsigned int buf_len = 0;
     char* send_buffer = serialize_request(request, &buf_len);
     write(*client_socket, send_buffer, buf_len);
+
+    free(send_buffer);
     return 0;
 }
 

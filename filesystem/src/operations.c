@@ -7,18 +7,24 @@ int cd(fs_t* fs, web_request_t* request, web_response_t* response) {
     inode_t* directory;
     if (fs_find_inode(fs, request->args[0], FILE_DIR, &directory) < 0) {
         response->status = RESPONSE_INVALID_REQUEST;
-        response->buff = "No such directory";
+        char* msg = "No such directory";
+        response->buff = (char*) calloc(strlen(msg), sizeof(char));
+        strcpy(response->buff, msg);
         response->len = strlen(response->buff);
         return 0;
     }
     if (fs_set_current_directory(fs, directory) < 0) {
         response->status = RESPONSE_SERVER_ERROR;
-        response->buff = "Failed to set directory as current";
+        char* msg = "Failed to set directory as current";
+        response->buff = (char*) calloc(strlen(msg), sizeof(char));
+        strcpy(response->buff, msg);
         response->len = strlen(response->buff);
         return 0;
     }
     response->status = RESPONSE_OK;
-    response->buff = "OK";
+    char* msg = "OK";
+    response->buff = (char*) calloc(strlen(msg), sizeof(char));
+    strcpy(response->buff, msg);
     response->len = 2;
     return 0;
 }
@@ -54,7 +60,9 @@ int ls(fs_t* fs, web_request_t* request, web_response_t* response) {
     if (fs_find_inode(fs, request->args[0], FILE_DIR, &file) < 0) {
         if (fs_find_inode(fs, request->args[0], FILE_FILE, &file) < 0) {
             response->status = RESPONSE_INVALID_REQUEST;
-            response->buff = "No such directory";
+            char* msg = "No such directory";
+            response->buff = (char*) calloc(strlen(msg), sizeof(char));
+            strcpy(response->buff, msg);
             response->len = strlen(response->buff);
             return 0;
         }
@@ -63,7 +71,9 @@ int ls(fs_t* fs, web_request_t* request, web_response_t* response) {
     char* message = (char*) calloc(256, sizeof(char));
     if (ls_form_message(fs, file, message) < 0) {
         response->status = RESPONSE_SERVER_ERROR;
-        response->buff = "Failed to get contents";
+        char* msg = "Failed to get contents";
+        response->buff = (char*) calloc(strlen(msg), sizeof(char));
+        strcpy(response->buff, msg);
         response->len = strlen(response->buff);
     } else {
         response->status = RESPONSE_OK;
@@ -77,35 +87,45 @@ int ls(fs_t* fs, web_request_t* request, web_response_t* response) {
 
 int cp(fs_t* fs, web_request_t* request, web_response_t* response) {
     response->status = RESPONSE_OK;
-    response->buff = "OK";
+    char* msg = "OK";
+    response->buff = (char*) calloc(strlen(msg), sizeof(char));
+    strcpy(response->buff, msg);
     response->len = 2;
     return 0;
 }
 
 int cp_to_remote(fs_t* fs, web_request_t* request, web_response_t* response) {
     response->status = RESPONSE_OK;
-    response->buff = "OK";
+    char* msg = "OK";
+    response->buff = (char*) calloc(strlen(msg), sizeof(char));
+    strcpy(response->buff, msg);
     response->len = 2;
     return 0;
 }
 
 int cp_from_remote(fs_t* fs, web_request_t* request, web_response_t* response) {
     response->status = RESPONSE_OK;
-    response->buff = "OK";
+    char* msg = "OK";
+    response->buff = (char*) calloc(strlen(msg), sizeof(char));
+    strcpy(response->buff, msg);
     response->len = 2;
     return 0;
 }
 
 int rm(fs_t* fs, web_request_t* request, web_response_t* response) {
     response->status = RESPONSE_OK;
-    response->buff = "OK";
+    char* msg = "OK";
+    response->buff = (char*) calloc(strlen(msg), sizeof(char));
+    strcpy(response->buff, msg);
     response->len = 2;
     return 0;
 }
 
 int mv(fs_t* fs, web_request_t* request, web_response_t* response) {
     response->status = RESPONSE_OK;
-    response->buff = "OK";
+    char* msg = "OK";
+    response->buff = (char*) calloc(strlen(msg), sizeof(char));
+    strcpy(response->buff, msg);
     response->len = 2;
     return 0;
 }
@@ -114,11 +134,15 @@ int mkdir(fs_t* fs, web_request_t* request, web_response_t* response) {
     inode_t* inode;
     if (fs_create_file(fs, request->args[0], FILE_DIR, &inode) < 0) {
         response->status = RESPONSE_SERVER_ERROR;
-        response->buff = "Failed to create directory";
+        char* msg = "Failed to create directory";
+        response->buff = (char*) calloc(strlen(msg), sizeof(char));
+        strcpy(response->buff, msg);
         response->len = strlen(response->buff);
     } else {
         response->status = RESPONSE_OK;
-        response->buff = "OK";
+        char* msg = "OK";
+        response->buff = (char*) calloc(strlen(msg), sizeof(char));
+        strcpy(response->buff, msg);
         response->len = 2;
     }
     return 0;
@@ -126,7 +150,9 @@ int mkdir(fs_t* fs, web_request_t* request, web_response_t* response) {
 
 int cat(fs_t* fs, web_request_t* request, web_response_t* response) {
     response->status = RESPONSE_OK;
-    response->buff = "File content goes here";
+    char* msg = "File content goes here";
+    response->buff = (char*) calloc(strlen(msg), sizeof(char));
+    strcpy(response->buff, msg);
     response->len = strlen(response->buff);
     return 0;
 }

@@ -109,5 +109,6 @@ int send_response(web_response_t* response, char* pipe_path) {
     write(pipe, response->buff, response->len);
 
     close(pipe);
+    free(response->buff);
     return 0;
 }

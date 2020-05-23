@@ -1,10 +1,7 @@
 #include <client.h>
 #include <myfs.h>
-#include <errno.h>
-#include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdio.h>
 
 
 int initialize_request(int n_args, char *operation, char **args, web_request_t *request) {

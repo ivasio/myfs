@@ -78,11 +78,9 @@ int serve(socket_t server_socket, char *pipe_path) {
     // closing connection
     shutdown(client_socket, SHUT_RDWR);
     close(client_socket);
+    free(response.buff);
 
     printf("Finished processing the request\n\n");
-    // freeing used memory
-    // response_destroy(response);
-    // request_destroy(request);
 
     return 0;
 }
