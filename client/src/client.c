@@ -1,12 +1,8 @@
 #include <sys/socket.h>
-#include <sys/types.h>
 #include <netinet/in.h>
-#include <netdb.h>
 #include <stdio.h>
-#include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <errno.h>
 #include <arpa/inet.h>
 
 #include <myfs.h>
@@ -19,7 +15,6 @@ int main(int argc, char *argv[])
         printf("\n Usage: %s OPERATION OPERATION_ARGUMENT_1 [, OPERATION_ARGUMENT_2, ...]\n", argv[0]);
         return 1;
     }
-    printf("Requesting %s\n", argv[1]);
 
     web_request_t request;
     int request_init_res = initialize_request(argc - 2, argv[1], argv + 2, &request);
@@ -42,7 +37,6 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    printf("Server responded with message :\t");
     for (int i = 0; i < response.len; i++) {
         printf("%c", response.buff[i]);
     }
