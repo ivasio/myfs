@@ -81,5 +81,6 @@ unsigned get_disc_size(head_block_t* head_block);
 void map_disc(fs_t *fs, void *disc);
 unsigned get_inode_size(head_block_t* head_block);
 void fill_default_head_block(head_block_t *head_block);
-int parse_path(char *full_path, str_array *tokens);
+int parse_path(char *full_path, str_array *tokens, char *is_absolute);
+int setup_path_traversal(fs_t* fs, char* full_path, str_array* tokens, inode_t** file);
 int fs_setup_operations(fs_t *fs);

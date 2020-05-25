@@ -9,16 +9,14 @@
 #include <filesystem.h>
 
 
+
 int fs_find_inode(fs_t* fs, char* full_path, file_type_t file_type, inode_t **result) {
     str_array tokens;
-    int parse_path_result = parse_path(full_path, &tokens);
-    if (parse_path_result < 0) {
-        return parse_path_result;
-    }
-
     inode_t* file = NULL;
+
+    setup_path_traversal(fs, full_path, &tokens, &file);
+
     int get_child_result;
-    fs_get_root_dir(fs, &file);
     for (int i = 0; i < tokens.len - 1; i++) {
         get_child_result = fs_directory_get_child(fs, file, tokens.strings[i], &file);
         if (get_child_result < 0 || file->file_type != FILE_DIR) {
@@ -43,14 +41,14 @@ int fs_find_inode(fs_t* fs, char* full_path, file_type_t file_type, inode_t **re
 
 int fs_create_file(fs_t *fs, char *full_path, enum file_type_t file_type, inode_t** result) {
     str_array tokens;
-    parse_path(full_path, &tokens);
+    inode_t* directory;
+
+    setup_path_traversal(fs, full_path, &tokens, &directory);
     if (tokens.len == 0) {
         return -1;
     }
 
-    inode_t* directory;
     int get_child_result;
-    fs_get_root_dir(fs, &directory);
     for (int i = 0; i < tokens.len - 1; i++) {
         get_child_result = fs_directory_get_child(fs, directory, tokens.strings[i], &directory);
         if (get_child_result < 0) {

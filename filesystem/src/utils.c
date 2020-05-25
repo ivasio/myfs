@@ -4,10 +4,17 @@
 #include <data_structures.h>
 
 
-int parse_path(char *full_path, str_array* tokens_arr) {
+int parse_path(char *full_path, str_array *tokens_arr, char *is_absolute) {
     const char* delimiter = "/";
-    if (full_path[0] != delimiter[0]) {
-        return -1;
+
+    if (full_path[0] == '/') {
+        *is_absolute = 1;
+    } else {
+        *is_absolute = 0;
+    }
+
+    if (full_path[0] == '.') {
+        full_path += 1;
     }
 
     unsigned long path_len = strlen(full_path);
@@ -26,6 +33,21 @@ int parse_path(char *full_path, str_array* tokens_arr) {
 
     tokens_arr->len = n_tokens;
     tokens_arr->strings = tokens;
+    return 0;
+}
+
+
+int setup_path_traversal(fs_t* fs, char* full_path, str_array* tokens, inode_t** file) {
+    char is_absolute = 0;
+    int parse_path_result = parse_path(full_path, tokens, &is_absolute);
+    if (parse_path_result < 0) {
+        return parse_path_result;
+    }
+    if (is_absolute) {
+        fs_get_root_dir(fs, file);
+    } else {
+        *file = fs->current_dir;
+    }
     return 0;
 }
 
